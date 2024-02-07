@@ -1,0 +1,62 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: laravel
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: example-app
+    container_name: example-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - example
+
+  db:
+    image: mysql
+    container_name: example-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DOCKER_DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DOCKER_DB_PASSWORD}
+      MYSQL_USER: ${DOCKER_DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d # Volume de configuração de inicialização do mysql
+      - example-data:/var/lib/mysql # Volume de dados do container
+    networks:
+      - example
+    ports:
+      - "3306:3306"
+
+
+  nginx:
+    image: nginx:alpine
+    container_name: example-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - example
+
+  redis:
+    image: redis:latest
+    container_name: example-redis
+    networks:
+      - example
+
+volumes:
+  example-data:
+
+networks:
+  example:
+    driver: bridge
