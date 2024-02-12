@@ -2,29 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Seller;
-use Illuminate\Http\Request;
+use App\Http\Requests\CreateSellerRequest;
+use Core\UseCase\CreateSellerUseCase;
 
 class SellerController extends Controller
 {
+    public function store(
+        CreateSellerRequest $request,
+        CreateSellerUseCase $useCase,
+    ) {
+        $input = $request->validated();
 
-    /** Service container */
-    public function store(Request $request) {
-
-        /** Manipular a request */
-        $sellerName = $request->input('name');
-        $sellerEmail = $request->input('email');
-
-        /** Operação no banco de dados | Por meio de model */
-        $createdSeller = Seller::create([
-            'name' => $sellerName,
-            'email' => $sellerEmail
+        $result = $useCase->execute([
+            'sellerName' => $input['name'],
+            'sellerEmail' => $input['email']
         ]);
 
-        /** Serialização */
-        $parsedSeller = $createdSeller->toArray();
-
-        /** Gerar respostar http | Serialização */
-        return response()->json($parsedSeller, 201);
+        return response()->json($result, 201);
     }
 }
